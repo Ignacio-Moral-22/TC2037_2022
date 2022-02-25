@@ -1,0 +1,34 @@
+#lang racket
+
+#|
+Ejemplos de toma de decisiones en Racket
+Ignacio Moral - Gilberto Echeverria's class
+
+25-02-2022
+|#
+
+#|Decision Learning with ifs
+Syntaxis
+(if (condition) (True) (False))|#
+
+
+(define (get-sign number)
+  (if (zero? number) 'Zero
+      (if (< 0 number) 'Positive 'Negative)))
+#|
+  'Name is a symbol
+  "Text" is a string
+  "Text" can also be used as multi line comment, as long as it
+  doesn't affect the flow of the arguments
+|#
+
+#|
+  Decision learning with cond
+Syntaxis
+(cond ((opt 1) output) ((opt 2) output) ... (else output))
+|#
+(define (get-sign-cond number)
+  (cond
+    ((= 0 number) "Zero")
+    ((< 0 number) "Positive")
+    (else "Negative")))
