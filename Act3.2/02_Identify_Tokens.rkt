@@ -1,8 +1,10 @@
 #|
 Actividad 3.2 Programando un DFA
 
-Programa que identifica tokens basandose en el string otorgado por
-el usuario
+Program that allows identification of equation tokens based on a string
+provided by the user.
+
+Run this program with (arithmetic-lexer "your-string-here")
 
 Ignacio Joaquin Moral A01028470
 Alfredo JeongHyun Park A01658259
