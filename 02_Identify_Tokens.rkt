@@ -1,50 +1,64 @@
+#|
+Actividad 3.2 Programando un DFA
+
+Programa que identifica tokens basandose en el string otorgado por
+el usuario
+
+Ignacio Joaquin Moral A01028470
+Alfredo JeongHyun Park A01658259
+|#
+
 #lang racket
 
 (require racket/trace)
 
-;Examples
-; (automaton-1 (dfa-str 'start '(int) delta-arithmetic-2) "34+9")
-
 (provide arithmetic-lexer)
 
+; Define structures that will allow us to check different activities in the current state
 (struct dfa-str (initial-state accept-states transitions))
 
 (define (automaton-1 dfa input-string)
   (let loop
-    ; TODO => Return the list of characters found so that I can later use (list->string) function
     
     ([state (dfa-str-initial-state dfa)]       ; Current State
      [chars (string->list input-string)]       ; List of Characters
-     [listOfChars null]
-     [result null])                             ; List of Tokens with their Representation Found
-     ;[listOfChars null])                       ; List of Chars Found
-    
+     [listOfChars null]                        ; List of Chars Found
+     [result null])                            ; List of Tokens with their Representation Found
+
+    ; Reach the end of the string
     (if (empty? chars)
+        ; If it's a member of the accept states
         (if (member state (dfa-str-accept-states dfa))
-            (reverse (cons (list (list->string (reverse listOfChars)) state) result)) #f)
+            ; Eliminate spaces at the end, else add the last known state
+            (if (eq? state 'space) (reverse result)
+             (reverse (cons (list (list->string (reverse listOfChars)) state) result))) #f)
         ; Recursive Loop with the new state and the rest of the list
         (let-values
-            ; TODO => Add a 'value' that is the character returning, or just use the (car chars)
-            ; IF USING (car chars), add conditional if the token found is whitespace
             ([(token new_state) ((dfa-str-transitions dfa) state (car chars))])
           (loop
            new_state
            (cdr chars)
-           (if token (list (car chars)) (cons (car chars) listOfChars))
+
+           ;If a token is identified, or the token is a space reset the list of characters added.
+           ;Else, if it's not a space, append the current character to the list
+           (if token
+               (list (car chars))
+               (if (eq? token 'space)
+                   (list (car chars))
+                   (cons (car chars) listOfChars)))
+
            ; Update the list of tokens found
-           ; TODO => Reverse the list of chars found, make it a string,
-           ; make pair with result, return (cons (pair) result)
+           ; If it's a space, or there's no token found, just send back previous results.
+           ; If it's not a space, create a pair of token and characters, and add to the list
+           ; of results.
            
-           (if token (cons (list (list->string (reverse listOfChars)) token) result) result)
-           
-           #|
-           ; TODO => Add chars found to list, to reverse and convert to string later
-           (if token null (cons (car chars) listOfChars))
-           |#
+           (if token
+               (if (eq? token 'space)
+                   result
+                   (cons (list (list->string (reverse listOfChars)) token) result))
+               result)
            )))))
 
-;(if (eq? #f token) result (append (result) (list token)))
-;(let-values ([(token new_state) ((dfa-str-transitions dfa) state (car chars))]) (loop new_state (cdr chars) (if (eq? #f token) result (append (result) (list token)))))
 
 (define (operator? char)
   (member char '(#\+ #\- #\* #\^)))
@@ -56,7 +70,6 @@
   (member char '(#\+ #\-)))
 
 (define (delta-arithmetic-2 state character)
-; This now has VARs in the states
   (case state
     ['start (cond
               [(char-numeric? character) (values #f 'int)]
@@ -65,23 +78,27 @@
               [(eq? character #\() (values #f 'par_open)]
               [(eq? character #\space) (values #f 'space)]
               [else (values #f 'fail)])]
-    
+
+    ; Numeric sign. If it's followed by a number, it's a sign.
+    ; If it's followed by a space is an operator, else it's WRONG
     ['n_sign (cond
                [(char-numeric? character) (values #f 'int)]
                [(eq? character #\space) (values 'op 'space)]
                [else (values #f 'fail)])]
-    
+
+    ; Integers
     ['int (cond
             [(char-numeric? character) (values #f 'int)]
             [(operator? character) (values 'int 'op)]
             [(eq? character #\/) (values 'int 'diagonal)]
             [(eq? character #\=) (values 'int 'eq)]
-            [(eq? character #\.) (values #f 'float)] ; Suspiscious, maybe change to "dot" and send err if it's something like 2.
+            [(eq? character #\.) (values #f 'float)]
             [(or (eq? character #\e) (eq? character #\E)) (values #f 'e)]
             [(eq? character #\)) (values 'exp 'par_close)]
             [(eq? character #\space) (values 'int 'space)]
             [else (values #f 'fail)])]
-    
+
+    ; If a point is found in an int, change to float
     ['float (cond
             [(char-numeric? character) (values #f 'float)]
             [(operator? character) (values 'float 'op)]
@@ -92,7 +109,8 @@
             [(eq? character #\)) (values 'exp 'par_close)]
             [(eq? character #\space) (values 'float 'space)]
             [else (values #f 'fail)])]
-    
+
+    ; Variables. Start in letter or underscore
     ['var (cond
             [(or (char-alphabetic? character) (eq? character #\_)) (values #f 'var)]
             [(char-numeric? character) (values #f 'var)]
@@ -102,14 +120,16 @@
             [(eq? character #\)) (values 'var 'par_close)]
             [(eq? character #\space) (values 'var 'space)]
             [else (values #f 'fail)])]
-    
+
+    ; Operations
     ['op (cond
            [(char-numeric? character) (values 'op 'int)]
            [(or (char-alphabetic? character) (eq? character #\_)) (values 'op 'var)]
            [(eq? character #\() (values 'op 'par_open)]
            [(eq? character #\space) (values 'op 'space)]
            [else (values #f 'fail)])]
-    
+
+    ; Equal sign. Only operator that allows numeric ints, like "-3", after it
     ['eq (cond
            [(char-numeric? character) (values 'op 'int)]
            [(number-sign? character) (values 'op 'n_sign)]
@@ -117,7 +137,8 @@
            [(eq? character #\() (values 'op 'par_open)]
            [(eq? character #\space) (values 'op 'space)]
            [else (values #f 'fail)])]
-    
+
+    ; Diagonal. Has two options, could be the start of a comment, or a division operator.
     ['diagonal (cond
            [(eq? character #\/) (values #f 'comment)]
            [(char-numeric? character) (values 'op 'int)]
@@ -125,12 +146,14 @@
            [(eq? character #\() (values 'op 'par_open)]
            [(eq? character #\space) (values 'op 'space)]
            [else (values #f 'fail)])]
-    
+
+    ; Letter e. Is it an exponent? Or a misclick?
     ['e (cond
            [(eq? character #\-) (values #f 'exp)]
            [(char-numeric? character) (values #f 'exp)]
            [else (values #f 'fail)])]
-    
+
+    ; Exponent found
     ['exp (cond
            [(char-numeric? character) (values #f 'exp)]
            [(operator? character) (values 'exp 'op)]
@@ -141,12 +164,14 @@
            [(eq? character #\space) (values 'exp 'space)]
            [else (values #f 'fail)])]
 
+    ; Opening Parenthesis
     ['par_open (cond
            [(char-numeric? character) (values 'par_open 'int)]
            [(or (char-alphabetic? character) (eq? character #\_)) (values 'par_open 'var)]
            [(eq? character #\space) (values 'par_open 'space)]
            [else (values #f 'fail)])]
 
+    ; Closing Parenthesis
     ['par_close (cond
            [(operator? character) (values 'par_close 'op)]
            [(eq? character #\/) (values 'par_close 'diagonal)]
@@ -154,7 +179,9 @@
            [(eq? character #\space) (values 'par_close 'space)]
            [else (values #f 'fail)])]
 
+    ; Spaces conditions
     ['space (cond
+           [(eq? character #\space) (values #f 'space)]
            [(char-numeric? character) (values 'space 'int)]
            [(number-sign? character) (values 'space 'n_sign)]
            [(operator? character) (values 'space 'op)]
@@ -164,12 +191,12 @@
            [(eq? character #\() (values 'space 'par_open)]
            [(eq? character #\)) (values 'space 'par_close)]
            [else (values #f 'fail)])]
-           
-           
-           
-    
+
+    ; Comments. Once a comment starts, the rest of the string is a comment.
     ['comment (values #f 'comment)]
+
+    ; Fail condition
     ['fail (values #f 'fail)]))
 
 (define (arithmetic-lexer input-string)
-  (automaton-1 (dfa-str 'start '(int var exp float par_close comment) delta-arithmetic-2) input-string))
+  (automaton-1 (dfa-str 'start '(int var exp float par_close comment space) delta-arithmetic-2) input-string))

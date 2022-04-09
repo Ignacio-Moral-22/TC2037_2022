@@ -17,16 +17,8 @@ defmodule Learn do
 
   end
 
-  def fact_tail(x, a) do
-    if x==0 do
-      a
-    else
-      fact_tail(x-1, x*a)
-    end
-  end
-
-  def tail(x) do
-    fact_tail(x, 1)
-  end
+  def fact_tail(x), do: do_fact_tail(x, 1)
+  defp do_fact_tail(0, a), do: a
+  defp do_fact_tail(x, a), do: do_fact_tail(x-1, x*a)
 
 end
