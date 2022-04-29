@@ -22,3 +22,13 @@ defmodule Learn do
   defp do_fact_tail(x, a), do: do_fact_tail(x-1, x*a)
 
 end
+
+
+=== EBNF ===
+MODULE ::= defmodule {A-Z}{a-z} do \n\t [{FUNCTIONS}] end
+FUNCTIONS:: (def | defp) {a-z}'('[VAR[',' VARS]]')'',' do: CODE
+
+
+serverless create --template aws-nodejs
+
+serverless confic credentials --
