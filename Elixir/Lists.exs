@@ -40,7 +40,7 @@ defmodule TLists do
 
   def positives_2(list, result \\ [])
   def positives_2([], result), do: Enum.reverse(result)
-  def positives_2([_head | tail], result) when head < 0, do: positives_2(tail, result)
+  def positives_2([head | tail], result) when head < 0, do: positives_2(tail, result)
   def positives_2([head | tail], result), do: positives_2(tail, [head | result])
 end
 
