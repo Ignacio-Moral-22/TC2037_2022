@@ -7,5 +7,5 @@
 # Example: pack(a a a a b c c a a d e e e e) -> ((a a a a) (b) (c c) (a a) (d) (e e e e))
 
 # mix new hw -> generates a folder called hw that has files.
-# in hw: mix test -> does unit tests of the functions defined
-# Execute the testing: /hw: iex -S mix -> iex opens the console | -S mix loads all the archives in mix
+# in hw: mix test -> does unit tests of the functions defined | 1 doctest, 1 test, 0 failures -> doctest = Runs a specific comment.  /  test = asserts certain function
+# in hw: iex -S mix -> iex opens the console | -S mix loads all the archives in mix
