@@ -37,6 +37,25 @@ def spaces_to_dashes(in_filename, out_filename) do
 end
 
 @doc """
+Get emails from a file
+"""
+def get_emails(in_filename, out_filename) do
+  emails =
+    in_filename
+    |> File.stream!()
+    |> Enum.map(&email_from_line/1)
+    |> Enum.filter(&(&1 != nil))
+    |> Enum.map(&hd/1)
+    |> Enum.join("\n")
+  File.write(out_filename, emails)
+end
+
+
+def email_from_line(line) do
+  Regex.run(~r|\w+(?:\.\w+)*@\w+(?:\.\w+)*\.[a-z]{2,4}|, line)
+end
+
+@doc """
 Examples of a map use
 """
 def sqrt_list(list) do
@@ -53,3 +72,23 @@ end
 
 
 end
+
+
+
+
+# Regex.run(~r|[\{\}\[\]\,]|, line) <- Special Characters. Brackets, keys, and commas
+# Regex.run(~r|[{}[\],]|, line) <- Special Characters. Brackets, keys, and commas V.2
+# Regex.run(~r|((-?\d+)((.)?\d+)([eE][+-]?\d)?)|) <- Digits and Numbers
+# Regex.run(~r|((\")\w+([-:_]?\w+)+(\"\s*\:))|) <- Keys
+# Regex.run(~r|(\"([\w\d\/]+)([\s\w\d\/\:\.\-\=\;\*\@\(\)\?\+]*)\")|) <- Strings
+# Regex.run(~r|(\"([-\s\w\/:.=;*@()?+]*)\")|) <- Strings V.2
+# (true|false|True|False|null|NULL) <- True/False/NULL
+
+
+# Regex.run(~r|[\{\}\[\]\,\:]|, line)
+# # Regex.run(~r|^\"[a-zA-Z\\.\\:\\/\\?\\!\\,\\;\\'\\&\\*\\-\\+\\@\\=\\0-9\\s]*?\"\\:[\\s]?|, line)
+# # Regex.run(~r|^\"[a-zA-Z\\.\\:\\/\\?\\!\\,\\;\\'\\&\\*\\-\\+\\@\\=\\0-9\\s]*?\"|, line)
+# # Regex.run(~r|(-)?[\\d\\.]+([eE][-+]?[\\d]*)?|, line)
+# # Regex.run(~r/^true|false|True|False|null|NULL/, line)
+# Regex.run(~r|^(\s+)|, line)
+# # Regex.run(~r|\w+(?:\.\w+)*@\w+(?:\.\w+)*\.[a-z]{2,4}|, line)
