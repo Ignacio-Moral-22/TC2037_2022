@@ -78,8 +78,8 @@ end
 
 # Regex.run(~r|[\{\}\[\]\,]|, line) <- Special Characters. Brackets, keys, and commas
 # Regex.run(~r|[{}[\],]|, line) <- Special Characters. Brackets, keys, and commas V.2
-# Regex.run(~r|((-?\d+)((.)?\d+)([eE][+-]?\d)?)|) <- Digits and Numbers
-# Regex.run(~r|((\")\w+([-:_]?\w+)+(\"\s*\:))|) <- Keys
+Regex.run(~r|((-?\d+)((.)?\d+)([eE][+-]?\d)?)|) <- Digits and Numbers
+Regex.run(~r|((\")\w+([-:_]?\w+)+(\"\s*\:))|) <- Keys
 # Regex.run(~r|(\"([\w\d\/]+)([\s\w\d\/\:\.\-\=\;\*\@\(\)\?\+]*)\")|) <- Strings
 # Regex.run(~r|(\"([-\s\w\/:.=;*@()?+]*)\")|) <- Strings V.2
 # (true|false|True|False|null|NULL) <- True/False/NULL
