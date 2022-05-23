@@ -1,16 +1,41 @@
 # Reto1.get_captures('Test_files/example_5.json', 'a.txt')
 defmodule Reto1 do
+  @moduledoc """
+  Elixir JSON Syntax Highlighter
+  Ignacio Joaquin Moral - A01028470
+  Alfredo Jeong Hyun Park - A01658259
+  """
+
   @doc """
   Get the values from the input file. Send to an output file specified by the user
   CHANGE: auto-generate an html file
   """
-  def get_captures(in_filename, out_filename) do
+  def get_captures(in_filename) do
+    time1 = Time.utc_now()
     captures =
       in_filename
       |> File.stream!()
       |> Enum.map(&start_recognition/1)
       |> Enum.join("")
-    File.write(out_filename, captures)
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head>
+      <title>JSON Code</title>
+      <link rel="stylesheet" href="token_colors.css" />
+      </head>
+      <body>
+        <h1>May 22, 2022</h1>
+        <pre>
+    #{captures}
+        </pre>
+      </body>
+    </html>
+    """
+    File.write('output.html', html)
+    time2 = Time.utc_now()
+    IO.puts(time1)
+    IO.puts(time2)
   end
 
   @doc """
@@ -31,7 +56,7 @@ defmodule Reto1 do
       spanClasses
     else
       tuple = email_from_line(line)
-      recognize_values(Atom.to_string(elem(tuple, 0)), spanClasses <> Atom.to_string(elem(tuple, 1)))
+      recognize_values(elem(tuple, 0), spanClasses <> elem(tuple, 1))
     end
   end
 
@@ -41,7 +66,7 @@ defmodule Reto1 do
   """
   defp email_from_line(line) do
     keys = Regex.run(~r|((\s*)?(\")\w+([-:_]?\w+)+(\"\s*\:)(\s*)?)|, line, [capture: :first, return: :index])
-    strings = Regex.run(~r|((\s*)?\"([-\s\w\/:.,=;*&@()?+']*)\")|, line, [capture: :first, return: :index])
+    strings = Regex.run(~r|((\s*)?\"([-\s\w\/:.,=;*&@()+?']*)\")|, line, [capture: :first, return: :index])
     numbers = Regex.run(~r|((-?\d*)((.)?\d)([eE][+-]?\d)?)|, line, [capture: :first, return: :index])
     bools = Regex.run(~r/(true|false|True|False|null|NULL)/, line, [capture: :first, return: :index])
     separations = Regex.run(~r|(\s*)?[{}[\],]?(\s*)?|, line, [capture: :first, return: :index])
@@ -61,10 +86,9 @@ defmodule Reto1 do
   """
   defp capture_values(index, value, line) do
     capture = String.slice(line, elem(index, 0), elem(index, 1))
-    IO.inspect(capture)
     span = create_span(capture, value)
     line = String.replace(line, capture, "")
-    tuple = {String.to_atom(line), String.to_atom(span)}
+    tuple = {line, span}
     tuple
   end
 
@@ -75,9 +99,8 @@ defmodule Reto1 do
   defp capture_punctuation(index, value, line) do
     capture = String.slice(line, elem(index, 0), elem(index, 1))
     span = create_span(capture, value)
-    IO.inspect(capture)
     line = String.replace_prefix(line, capture, "")
-    tuple = {String.to_atom(line), String.to_atom(span)}
+    tuple = {line, span}
     tuple
   end
 
