@@ -1,70 +1,90 @@
+# Reto1.get_captures('Test_files/example_5.json', 'a.txt')
 defmodule Reto1 do
   @doc """
-Get emails from a file
-"""
-  def get_emails(in_filename, out_filename) do
-    emails =
+  Get the values from the input file. Send to an output file specified by the user
+  CHANGE: auto-generate an html file
+  """
+  def get_captures(in_filename, out_filename) do
+    captures =
       in_filename
       |> File.stream!()
       |> Enum.map(&start_recognition/1)
-      # |> IO.inspect()
-      # |> Enum.filter(&(&1 != nil))
-      # |> Enum.map(&hd/1)
       |> Enum.join("")
-    File.write(out_filename, emails)
+    File.write(out_filename, captures)
   end
 
-  def start_recognition(line) do
+  @doc """
+  Default start function. Allows sending values to recognize_values while keeping the pipeline format.
+  Used to avoid troubles with Enum.map
+  """
+  defp start_recognition(line) do
     recognize_values(line, "")
   end
-  def recognize_values(line, spanClasses) do
+
+  @doc """
+  Recursive function. Receives the line and all the span classes found in said line. Starts with 0 spanClasses.
+  If there's nothing to remove, returns the span classes found.
+  If there's still text, it will recurse until the string is empty, adding the span classes found along the way.
+  """
+  defp recognize_values(line, spanClasses) do
     if String.length(line) == 0 do
       spanClasses
     else
       tuple = email_from_line(line)
       recognize_values(Atom.to_string(elem(tuple, 0)), spanClasses <> Atom.to_string(elem(tuple, 1)))
     end
-
   end
 
-  def email_from_line(line) do
-    empty = Regex.run(~r|\s+|, line, [capture: :first, return: :index])
-    keys = Regex.run(~r|((\")\w+([-:_]?\w+)+(\"\s*\:))|, line, [capture: :first, return: :index])
-    strings = Regex.run(~r|(\"([-\s\w\/:.,=;*&@()?+']*)\")|, line, [capture: :first, return: :index])
+  @doc """
+  Identify different points in the string sent. Keys, strings, numbers, boolean values,
+  and separations like [, ], {, }, and commas
+  """
+  defp email_from_line(line) do
+    keys = Regex.run(~r|((\s*)?(\")\w+([-:_]?\w+)+(\"\s*\:)(\s*)?)|, line, [capture: :first, return: :index])
+    strings = Regex.run(~r|((\s*)?\"([-\s\w\/:.,=;*&@()?+']*)\")|, line, [capture: :first, return: :index])
     numbers = Regex.run(~r|((-?\d*)((.)?\d)([eE][+-]?\d)?)|, line, [capture: :first, return: :index])
     bools = Regex.run(~r/(true|false|True|False|null|NULL)/, line, [capture: :first, return: :index])
-    separations = Regex.run(~r|[{}[\],]|, line, [capture: :first, return: :index])
+    separations = Regex.run(~r|(\s*)?[{}[\],]?(\s*)?|, line, [capture: :first, return: :index])
     cond do
-      empty != nil -> function(List.first(empty), 'empty_space', line)
-      keys != nil -> function(List.first(keys), 'object_key', line)
-      strings != nil -> function(List.first(strings), 'string', line)
-      numbers != nil -> function(List.first(numbers), 'number', line)
-      bools != nil -> function(List.first(bools), 'reserved-word', line)
-      separations != nil -> function_punctuation(List.first(separations), 'puctuation', line)
+      keys != nil -> capture_values(List.first(keys), 'object-key', line)
+      strings != nil -> capture_values(List.first(strings), 'string', line)
+      numbers != nil -> capture_values(List.first(numbers), 'number', line)
+      bools != nil -> capture_values(List.first(bools), 'reserved-word', line)
+      separations != nil -> capture_punctuation(List.first(separations), 'puctuation', line)
     end
   end
 
-
-  def function(index, value, line) do
+  @doc """
+  Default capture function. Splits the original line sent to get the value identified, sends to create a span, removes the
+  section from the line, and sends back a tuple. The tuple is done in order to send more than one value back, in
+  this case, the span and the modified line
+  """
+  defp capture_values(index, value, line) do
     capture = String.slice(line, elem(index, 0), elem(index, 1))
+    IO.inspect(capture)
     span = create_span(capture, value)
     line = String.replace(line, capture, "")
     tuple = {String.to_atom(line), String.to_atom(span)}
     tuple
   end
 
-  def function_punctuation(index, value, line) do
-    IO.inspect(index)
+  @doc """
+  Separates puntuations. Works similar to the previous one, but only removes the first instance of the value found, not the
+  multiple possible values.
+  """
+  defp capture_punctuation(index, value, line) do
     capture = String.slice(line, elem(index, 0), elem(index, 1))
     span = create_span(capture, value)
+    IO.inspect(capture)
     line = String.replace_prefix(line, capture, "")
-    IO.inspect(line)
     tuple = {String.to_atom(line), String.to_atom(span)}
     tuple
   end
 
-
-  def create_span(line, value_found) do
+  @doc """
+  Default function to generate spans. Takes the value found and the string found, and inserts it.
+  """
+  defp create_span(line, value_found) do
     "<span class=\"#{value_found}\">#{line}</span>"
   end
 
