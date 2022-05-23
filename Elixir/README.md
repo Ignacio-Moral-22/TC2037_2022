@@ -14,8 +14,7 @@ al archivo que quieran hacer input.
 ```
 Reto1.get_captures(input_file_here)
 ```
-*** Ejemplo ***
-
+### Ejemplo
 ```
 Reto1.get_captures('Test_files/example_4.json')
 ```
